@@ -10,6 +10,10 @@ struct Tensor4D {
     Tensor4D(unsigned int const shape_[4], T const *data_) {
         unsigned int size = 1;
         // TODO: 填入正确的 shape 并计算 size
+        for(int i=0; i<4; i++) {
+            shape[i] = shape_[i];
+            size *= shape[i];
+        }
         data = new T[size];
         std::memcpy(data, data_, size * sizeof(T));
     }
@@ -28,6 +32,45 @@ struct Tensor4D {
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
         // TODO: 实现单向广播的加法
+                // 先检查广播规则是否满足
+        for (int k = 0; k < 4; ++k) {
+            ASSERT(others.shape[k] == shape[k] || others.shape[k] == 1,
+                   "Broadcast shape mismatch");
+        }
+
+        // 预计算 strides（行主序）
+        unsigned int stride_this[4];
+        unsigned int stride_other[4];
+        stride_this[3] = 1;
+        stride_other[3] = 1;
+        for (int k = 2; k >= 0; --k) {
+            stride_this[k] = stride_this[k + 1] * shape[k + 1];
+            stride_other[k] = stride_other[k + 1] * others.shape[k + 1];
+        }
+
+        // 遍历 this 的所有元素，把 (i0,i1,i2,i3) 映射到 others 的索引
+        for (unsigned int i0 = 0; i0 < shape[0]; ++i0) {
+            unsigned int o0 = (others.shape[0] == 1 ? 0 : i0);
+            for (unsigned int i1 = 0; i1 < shape[1]; ++i1) {
+                unsigned int o1 = (others.shape[1] == 1 ? 0 : i1);
+                for (unsigned int i2 = 0; i2 < shape[2]; ++i2) {
+                    unsigned int o2 = (others.shape[2] == 1 ? 0 : i2);
+                    for (unsigned int i3 = 0; i3 < shape[3]; ++i3) {
+                        unsigned int o3 = (others.shape[3] == 1 ? 0 : i3);
+
+                        unsigned int idx_this =
+                            i0 * stride_this[0] + i1 * stride_this[1] +
+                            i2 * stride_this[2] + i3;
+
+                        unsigned int idx_other =
+                            o0 * stride_other[0] + o1 * stride_other[1] +
+                            o2 * stride_other[2] + o3;
+
+                        data[idx_this] += others.data[idx_other];
+                    }
+                }
+            }
+        }
         return *this;
     }
 };
