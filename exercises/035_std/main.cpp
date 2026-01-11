@@ -15,6 +15,7 @@ void input(std::string &op, MyVector<double> &vec) {
 
     std::stringstream ss{line};
 
+
     ss >> op;
 
     double number;
