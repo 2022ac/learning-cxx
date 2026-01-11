@@ -8,7 +8,7 @@ struct Numbers {
 };
 
 
-void input(std::string &op, MyVector &vec) {
+void input(std::string &op, MyVector<double> &vec) {
     std::cout << ">>> ";
     std::string line;
     std::getline(std::cin, line);
@@ -18,13 +18,14 @@ void input(std::string &op, MyVector &vec) {
     ss >> op;
 
     double number;
-    for (std::size_t i = 0; i < vec.capacity() && ss >> number; i++) {
+    for (std::size_t i = 0; ss >> number; i++) {
         vec.push_back(number);
+        std::cout << __FILE__ << " " << __LINE__ << " " << vec.capacity() << std::endl;
     }
     std::cout << op << std::endl;
 }
 
-double sum(MyVector &vec) {
+double sum(MyVector<double> &vec) {
     double res = 0;
     for (std::size_t i = 0; i < vec.size(); i++) {
         res += vec[i];
@@ -34,7 +35,8 @@ double sum(MyVector &vec) {
 
 int main() {
     std::cout << "---------------" << std::endl;
-    MyVector vec;
+    // 当设置为模板类的时候 改为T 类型 之后类初始化的时候就需要 <> 来指定参数了
+    MyVector<double> vec;
     std::string op;
     input(op, vec);
     double sums = sum(vec);
